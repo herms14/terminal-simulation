@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta viewport="width=device-width, initial-scale=1.0">
+    <title>CLI Terminal Simulation</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: #333;
+            color: #dcdcdc;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .window {
+            border: 2px solid #ffffff;
+            max-width: 80%;
+            height: 70vh;
+            margin: 5vh auto;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .title-bar {
+            background-color: #aaaaaa;
+            color: #000000;
+            padding: 5px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+        }
+        .title-bar-buttons {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+        }
+        .title-bar-button.red, .title-bar-button.yellow, .title-bar-button.green {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .title-bar-button.red { background-color: #ff5f56; }
+        .title-bar-button.yellow { background-color: #ffbd2e; }
+        .title-bar-button.green { background-color: #27c93f; }
+        .terminal {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            overflow: auto;
+            border-radius: 0 0 5px 5px;
+        }
+        .prompt {
+            background-color: #0077c2;
+            color: #ffffff;
+            padding: 2px 5px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .progress-container {
+            display: flex; /* Use flexbox */
+            align-items: center; /* Vertically center items */
+            height: 20px;
+            margin-bottom: 10px; /* Ample space after each skill */
+            flex-grow: 1;
+            background-color: #ddd;
+            border-radius: 5px;
+            height: 20px;
+            overflow: hidden;
+            margin-left: 5px; /* Space between skill name and progress bar */
+            max-width: 50%; 
+          
+        }
+        .progress-bar {
+            background-color: #4bee00;
+            height: 100%;
+            width: 0%;
+            margin-left: 0px;
+    
+            /* Remove transition */
+        }
+        .skill-container {
+            display: flex; /* Use flexbox */
+            align-items: center; /* Vertically center items */
+            margin-bottom: 10px; /* Ample space after each skill */
+            justify-content: space-between; /* Align items with space between */
+            width: 100%; /* Ensure full width */
+        }
+        
+        .skill-name {
+            white-space: nowrap;
+            margin-right: 10px; /* Adjust margin for alignment */
+        }
+        .cursor-animation {
+            display: inline-block;
+            background-color: #ffffff;
+            width: 2px;
+            height: 18px;
+            animation: blink-animation 1s infinite;
+        }
+        @keyframes blink-animation {
+            50% { background-color: transparent; }
+        }
+
+        /* New keyframes for progress animation */
+        @keyframes fill-progress {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-bar-buttons">
+                <span class="title-bar-button red"></span>
+                <span class="title-bar-button yellow"></span>
+                <span class="title-bar-button green"></span>
+            </div>
+            <div>Welcome to Hermes Miraflor's Github Profile</div>
+        </div>
+        <div class="terminal" id="terminal"></div>
+    </div>
+
+    <script>
+        const jsonData = {
+            "Name": "Hermes Miraflor II",
+            "Occupation": "Azure Infrastructure Cloud Solutions Architect @ Microsoft",
+            "Location": "Metro Manila, Philippines",
+            "Email": "herms14@gmail.com",
+            "Languages": {
+                "Terraform": "100%",
+                "HTML": "95%",
+                "CSS": "90%",
+                "Javascript": "85%",
+                "Python": "80%",
+                "Ansible": "75%",
+                "Powershell": "70%",
+                "Yaml": "60%"
+            },
+            "Tech Stack": {
+                "Azure": "100%",
+                "Docker": "90%",
+                "Git": "90%",
+                "Windows Server": "90%",
+                "Linux": "90%",
+                "Kubernetes": "88%",
+                "AWS": "80%",
+                "GCP": "65%",
+            },
+        };
+    
+        function createCursor() {
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor-animation';
+            cursor.textContent = '|'; // Cursor character
+            return cursor;
+        }
+    
+        function typeEffect(text, element, delay) {
+            return new Promise(resolve => {
+                let i = 0;
+                const cursor = createCursor();
+                element.appendChild(cursor); // Append cursor to the typing element
+    
+                function type() {
+                    if (i < text.length) {
+                        cursor.before(text.charAt(i)); // Insert text before cursor
+                        i++;
+                        setTimeout(type, delay);
+                    } else {
+                        cursor.remove(); // Remove cursor once typing is complete
+                        resolve();
+                    }
+                }
+                type();
+            });
+        }
+    
+        async function displayProgress(level, progressContainer) {
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressContainer.appendChild(progressBar);
+            progressBar.style.animation = 'fill-progress 2s forwards'; // Use animation instead of transition
+            progressBar.style.width = level; // Set initial width
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for the animation to complete
+        }
+    
+        async function displayDataSequentially(data, container) {
+            for (const [key, value] of Object.entries(data)) {
+                const lineContainer = document.createElement('div');
+                container.appendChild(lineContainer);
+    
+                const prompt = document.createElement('span');
+                prompt.className = 'prompt';
+                prompt.textContent = `${key} > `;
+                lineContainer.appendChild(prompt);
+    
+                const textContainer = document.createElement('span');
+                lineContainer.appendChild(textContainer);
+    
+                if (typeof value === "object") {
+                    for (const [skill, level] of Object.entries(value)) {
+                        const skillContainer = document.createElement('div');
+                        skillContainer.className = 'skill-container';
+                        textContainer.appendChild(skillContainer); // Use textContainer for skills
+    
+                        const skillName = document.createElement('span');
+                        skillName.className = 'skill-name';
+                        skillName.textContent = skill + ': ';
+                        skillContainer.appendChild(skillName);
+    
+                        const progressContainer = document.createElement('div');
+                        progressContainer.className = 'progress-container';
+                        skillContainer.appendChild(progressContainer);
+    
+                        await typeEffect("", skillName, 50); // Slight delay, no actual text to type
+                        await displayProgress(level, progressContainer);
+                    }
+                } else {
+                    // Type out non-object values with a cursor
+                    await typeEffect(value, textContainer, 100);
+                }
+    
+                await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause before the next entry
+            }
+        }
+    
+        document.addEventListener('DOMContentLoaded', async () => {
+            const terminal = document.getElementById('terminal');
+            await displayDataSequentially(jsonData, terminal);
+        });
+    </script>
+</body>
+</html>

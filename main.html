@@ -82,12 +82,13 @@
           
         }
         .progress-bar {
-            background-color: #4bee00;
-            height: 100%;
-            width: 0%;
-            margin-left: 0px;
-    
-            /* Remove transition */
+            position: relative; /* Add this */
+            height: 20px;
+            background-color: #00ee0c;
+            display: flex; /* Add this */
+            justify-content: center; /* Add this */
+            align-items: center; /* A
+            /* other styles... */
         }
         .skill-container {
             display: flex; /* Use flexbox */
@@ -191,10 +192,45 @@
             const progressBar = document.createElement('div');
             progressBar.className = 'progress-bar';
             progressContainer.appendChild(progressBar);
-            progressBar.style.animation = 'fill-progress 2s forwards'; // Use animation instead of transition
-            progressBar.style.width = level; // Set initial width
+        
+            // Create a span element for the percentage display
+            const percentageDisplay = document.createElement('span');
+            percentageDisplay.style.color = '#333'; // Ensure the text is visible against the progress bar's background
+            percentageDisplay.style.position = 'absolute'; // Position it inside the progress bar
+            percentageDisplay.style.left = '5px'; // Keep some padding from the left
+            percentageDisplay.style.whiteSpace = 'nowrap'; // Prevent breaking into multiple lines
+            percentageDisplay.innerText = '0%'; // Initial percentage
+            progressBar.appendChild(percentageDisplay);
+        
+            // Dynamically create a custom animation with the desired width
+            const animationName = `fill-progress-${Math.random().toString(36).substr(2, 9)}`; // Ensure a unique name
+            const styleSheet = document.createElement('style');
+            styleSheet.type = 'text/css';
+            styleSheet.innerHTML = `
+                @keyframes ${animationName} {
+                    from { width: 0; }
+                    to { width: ${level}; }
+                }
+            `;
+            document.head.appendChild(styleSheet);
+        
+            progressBar.style.animation = `${animationName} 2s forwards`; // Apply the custom animation
+        
+            // Animate the percentage text update
+            let currentPercentage = 0;
+            const targetPercentage = parseInt(level, 10); // Convert the level (like "90%") to an integer
+            const interval = setInterval(() => {
+                if (currentPercentage < targetPercentage) {
+                    currentPercentage++;
+                    percentageDisplay.innerText = `${currentPercentage}%`;
+                } else {
+                    clearInterval(interval); // Stop the interval when the target is reached
+                }
+            }, 20); // Update roughly in sync with the animation duration
+        
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for the animation to complete
         }
+        
     
         async function displayDataSequentially(data, container) {
             for (const [key, value] of Object.entries(data)) {
